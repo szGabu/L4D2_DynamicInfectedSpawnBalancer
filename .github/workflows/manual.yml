@@ -26,7 +26,15 @@ jobs:
         run: |
           rm -rf metamod
           rm sourcemod/scripting/*.sp
-          
+
+      - name: Get Left4dhooks
+        run: |
+          git clone https://github.com/SilvDev/Left4DHooks.git
+          mkdir sourcemod/scripting/l4dd
+          mv Left4DHooks/sourcemod/scripting/l4dd/*.sp sourcemod/scripting/l4dd
+          mv Left4DHooks/sourcemod/scripting/include/*.inc sourcemod/scripting/include
+          rm -rf Left4DHooks
+
       - name: Copy files to Scripting Directory
         run: |
           cp -R scripting/* sourcemod/scripting/
