@@ -17,6 +17,11 @@ jobs:
           tar -xzf base.tar.gz -C . --strip-components=1
           rm base.tar.gz
 
+      - name: Verify extracted contents
+        run: |
+          echo "Contents of current directory:"
+          tree .
+
       - name: Clean existing .sp files (we dont need them)
         run: |
           rm addons/sourcemod/scripting/*.sp
@@ -34,11 +39,6 @@ jobs:
         run: |
           cd addons/sourcemod/scripting
           ./compile.sh
-
-      - name: Verify compiled contents
-        run: |
-          echo "Contents of compiled directory:"
-          tree addons/sourcemod/scripting/compiled
 
       - name: Compile Repository Plugins
         run: |
