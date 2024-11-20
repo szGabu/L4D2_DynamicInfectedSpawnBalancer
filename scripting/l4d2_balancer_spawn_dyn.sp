@@ -9,7 +9,7 @@
 #define PLUGIN_NAME			    				"[L4D2] Infected Dynamic Balancer"
 #define PLUGIN_AUTHOR		    				"gabuch2"
 #define PLUGIN_DESCRIPTION	    				"Originally based on xZk's plugin, this plugin manages all the infected balance in 1 simple plugin"
-#define PLUGIN_VERSION		    				"1.0.0"
+#define PLUGIN_VERSION		    				"1.0.0-hotfix1"
 #define PLUGIN_URL			    				"https://github.com/szGabu/L4D2_DynamicInfectedSpawnBalancer"
 
 #define PLAYERS_BASE_COUNT						4
@@ -84,20 +84,20 @@ public void OnPluginStart()
 	#if DEBUG
 	PrintToServer("[DEBUG] l4d2_balancer_spawn_dyn::OnPluginStart() - Called");
 	#endif
-	CreateConVar("sm_infected_balancer_version", PLUGIN_VERSION, "Version of Survivor Infected Balancer Plus", FCVAR_DONTRECORD | FCVAR_NOTIFY);
+	CreateConVar("sm_infected_balancer_version", PLUGIN_VERSION, "Version of Survivor Infected Balancer Plus", FCVAR_DONTRECORD);
 
 	//base cvars
-	g_cvarPluginEnable = CreateConVar("sm_infected_balancer_enabled", "1", "Enables the plugin", FCVAR_DONTRECORD | FCVAR_NOTIFY, true, 0.0, true, 1.0 );
-	g_cvarCheckMode = CreateConVar("sm_infected_balancer_check_mode", "4", "0: Check all survivors, 1: Do not check bots, 2: Not check dead survivors, 4: Dead survivors count as half (No effect if 2 is set), 8: Ignore campaign NPCs (like the ones in the Coldfront custom campaign, no effect is 1 is set) - This is an additive bitwise field", FCVAR_DONTRECORD | FCVAR_NOTIFY, true, 0.0, true, 15.0);	
-	g_cvarCacheInterval = CreateConVar("sm_infected_balancer_cache_interval", "5.0", "float: Determines the interval in where the survivors are counted. Caching is done to prevent an expensive operation in each director vscript variable call. 0.1 is the minimum value which is virtually instantaneous but may cause overhead.", FCVAR_DONTRECORD | FCVAR_NOTIFY, true, 0.1);	
+	g_cvarPluginEnable = CreateConVar("sm_infected_balancer_enabled", "1", "Enables the plugin", FCVAR_NOTIFY, true, 0.0, true, 1.0 );
+	g_cvarCheckMode = CreateConVar("sm_infected_balancer_check_mode", "4", "0: Check all survivors, 1: Do not check bots, 2: Not check dead survivors, 4: Dead survivors count as half (No effect if 2 is set), 8: Ignore campaign NPCs (like the ones in the Coldfront custom campaign, no effect is 1 is set) - This is an additive bitwise field", FCVAR_NOTIFY, true, 0.0, true, 15.0);	
+	g_cvarCacheInterval = CreateConVar("sm_infected_balancer_cache_interval", "5.0", "float: Determines the interval in where the survivors are counted. Caching is done to prevent an expensive operation in each director vscript variable call. 0.1 is the minimum value which is virtually instantaneous but may cause overhead.", FCVAR_NOTIFY, true, 0.1);	
 
 	//balance adjustement
-	g_cvarIncreaseHealth = CreateConVar("sm_infected_balancer_tank_increase_hp_percent", "2", "Increases each tank's HP by specified percent (%) per alive survivor. Maximum value is 50 but it's not recommended to put anything higher than 5, as it could create extremely damage sponge Tanks. 0 to disable.", FCVAR_DONTRECORD | FCVAR_NOTIFY, true, 0.0, true, 50.0);	
-	g_cvarSpecialInfectedGeneralPower = CreateConVar("sm_infected_balancer_si_general_power", "0.456", "Determines how much the limit of the general special infected amount will increase according with each survivor alive. Default value is the recommended one but you can experiment. 0 to disable.", FCVAR_DONTRECORD | FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_cvarSpecialInfectedDominatorPower = CreateConVar("sm_infected_balancer_si_dominator_power", "0.333", "Determines how much each category of dominator infected will increase according with each survivor alive. Default value is the recommended one but you can experiment. 0 to disable.", FCVAR_DONTRECORD | FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_cvarCommonInfectedPower = CreateConVar("sm_infected_balancer_commons_power", "0.222", "Determines how much the limit of each common infected will increase according with each survivor alive. Default value is the recommended one but you can experiment. 0 to disable.", FCVAR_DONTRECORD | FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_cvarSpawnIntervalPower = CreateConVar("sm_infected_balancer_spawn_interval_power", "0.018", "Determines how much the spawn interval of special infected will decrease according with each survivor alive, the minimum possible interval is 20 (Which is the Versus interval) no matter how much you increase this setting. Default value is the recommended one but you can experiment. 0 to disable.", FCVAR_DONTRECORD | FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	g_cvarVersusLike = CreateConVar("sm_infected_balancer_versus_like", "0", "Increases special infected by one AFTER CALCULATIONS. For example, most of the time in campaigns you will be dealing with 3 SI at the same time, this would effectively increase it to 4. No effect on Versus.", FCVAR_DONTRECORD | FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_cvarIncreaseHealth = CreateConVar("sm_infected_balancer_tank_increase_hp_percent", "2", "Increases each tank's HP by specified percent (%) per alive survivor. Maximum value is 50 but it's not recommended to put anything higher than 5, as it could create extremely damage sponge Tanks. 0 to disable.", FCVAR_NOTIFY, true, 0.0, true, 50.0);	
+	g_cvarSpecialInfectedGeneralPower = CreateConVar("sm_infected_balancer_si_general_power", "0.456", "Determines how much the limit of the general special infected amount will increase according with each survivor alive. Default value is the recommended one but you can experiment. 0 to disable.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_cvarSpecialInfectedDominatorPower = CreateConVar("sm_infected_balancer_si_dominator_power", "0.333", "Determines how much each category of dominator infected will increase according with each survivor alive. Default value is the recommended one but you can experiment. 0 to disable.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_cvarCommonInfectedPower = CreateConVar("sm_infected_balancer_commons_power", "0.222", "Determines how much the limit of each common infected will increase according with each survivor alive. Default value is the recommended one but you can experiment. 0 to disable.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_cvarSpawnIntervalPower = CreateConVar("sm_infected_balancer_spawn_interval_power", "0.018", "Determines how much the spawn interval of special infected will decrease according with each survivor alive, the minimum possible interval is 20 (Which is the Versus interval) no matter how much you increase this setting. Default value is the recommended one but you can experiment. 0 to disable.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_cvarVersusLike = CreateConVar("sm_infected_balancer_versus_like", "0", "Increases special infected by one AFTER CALCULATIONS. For example, most of the time in campaigns you will be dealing with 3 SI at the same time, this would effectively increase it to 4. No effect on Versus.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 	//game cvars
 	g_cvarDifficulty = FindConVar("z_difficulty");
