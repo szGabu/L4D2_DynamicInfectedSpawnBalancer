@@ -1,6 +1,8 @@
 # [L4D2] Dynamic Infected Spawn Balancer 
 *Author: gabuch2*
+
 *Version: 1.0.0*
+
 *Plugin for Left 4 Dead 2 that dynamically balances infected spawns and tanks based on the number of survivors.*
   
 Originally based on xZk's plugin, it eventually became a whole rewrite. The original plugin had several problems:
