@@ -22,28 +22,29 @@ jobs:
           echo "Contents of current directory:"
           tree .
 
-      - name: Clean existing .sp files (we dont need them)
+      - name: Clean existing files (we dont need them)
         run: |
-          rm addons/sourcemod/scripting/*.sp
+          rm -rf metamod
+          rm sourcemod/scripting/*.sp
           
       - name: Copy files to Scripting Directory
         run: |
-          cp -R scripting/* addons/sourcemod/scripting/
+          cp -R scripting/* sourcemod/scripting/
   
       - name: Verify Setup
         run: |
           echo "Contents of sourcmeod scripting directory:"
-          tree addons/sourcemod/scripting
+          tree sourcemod/scripting
 
       - name: Compile Repository Plugins
         run: |
-          cd addons/sourcemod/scripting
+          cd sourcemod/scripting
           ./compile.sh
 
       - name: Compile Repository Plugins
         run: |
           mkdir plugins
-          cp addons/sourcemod/scripting/compiled/*.smx plugins
+          cp sourcemod/scripting/compiled/*.smx plugins
           rm -rf addons
 
       - name: Upload Compiled Scripts as Artifact
