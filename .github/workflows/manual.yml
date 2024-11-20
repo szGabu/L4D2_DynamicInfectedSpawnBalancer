@@ -53,7 +53,7 @@ jobs:
         run: |
           mkdir plugins
           cp sourcemod/scripting/compiled/*.smx plugins
-          rm -rf addons
+          rm -rf sourcemod
 
       - name: Upload Compiled Scripts as Artifact
         uses: actions/upload-artifact@v4
