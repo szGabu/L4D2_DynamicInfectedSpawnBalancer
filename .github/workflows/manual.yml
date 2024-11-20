@@ -1,0 +1,88 @@
+name: Manual Build
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Download and Extract Sourcemod
+        run: |
+          wget https://sm.alliedmods.net/smdrop/1.12/sourcemod-1.12.0-git7169-linux.tar.gz -O base.tar.gz
+          tar -xzf base.tar.gz -C . --strip-components=1
+          rm base.tar.gz
+
+      - name: Clean existing .sp files (we dont need them)
+        run: |
+          rm addons/sourcemod/scripting/*.sp
+          
+      - name: Copy files to Scripting Directory
+        run: |
+          cp -R scripting/* addons/sourcemod/scripting/
+  
+      - name: Verify Setup
+        run: |
+          echo "Contents of sourcmeod scripting directory:"
+          tree addons/sourcemod/scripting
+
+      - name: Compile Repository Plugins
+        run: |
+          cd addons/sourcemod/scripting
+          ./compile.sh
+
+      - name: Verify compiled contents
+        run: |
+          echo "Contents of compiled directory:"
+          tree addons/sourcemod/scripting/compiled
+
+      - name: Compile Repository Plugins
+        run: |
+          mkdir plugins
+          cp addons/sourcemod/scripting/compiled/*.smx plugins
+          rm -rf addons
+
+      - name: Upload Compiled Scripts as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{github.event.repository.name}}-compiled
+          path: .
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{github.event.repository.name}}-compiled
+          path: .
+
+      - name: Verify downloaded artifact  contents
+        run: |
+          echo "Contents of directory:"
+          tree .
+
+      - name: ZIP Contents
+        run: |
+          zip -r ${{github.event.repository.name}}.zip ./
+
+      - name: Get latest tag
+        id: tag
+        run: |
+          echo "TAG=$(curl -s "https://api.github.com/repos/${{ github.repository }}/tags" | jq -r ".[0].name")" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.TAG }}
+          files: ${{github.event.repository.name}}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
