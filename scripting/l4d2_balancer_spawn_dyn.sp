@@ -9,7 +9,7 @@
 #define PLUGIN_NAME			    				"[L4D2] Infected Dynamic Balancer"
 #define PLUGIN_AUTHOR		    				"gabuch2"
 #define PLUGIN_DESCRIPTION	    				"Originally based on xZk's plugin, this plugin manages all the infected balance in 1 simple plugin"
-#define PLUGIN_VERSION		    				"1.0.0-hotfix1"
+#define PLUGIN_VERSION		    				"1.0.1"
 #define PLUGIN_URL			    				"https://github.com/szGabu/L4D2_DynamicInfectedSpawnBalancer"
 
 #define PLAYERS_BASE_COUNT						4
