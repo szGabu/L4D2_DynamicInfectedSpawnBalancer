@@ -30,6 +30,7 @@ char g_sDominatorLimit[4][]=
 ConVar g_cvarPluginEnable;
 ConVar g_cvarCheckMode;
 ConVar g_cvarCacheInterval;
+ConVar g_cvarShouldBalanceTanks;
 ConVar g_cvarIncreaseHealth;
 ConVar g_cvarSpecialInfectedGeneralPower;
 ConVar g_cvarSpecialInfectedDominatorPower;
@@ -41,6 +42,7 @@ ConVar g_cvarCommonLimit;
 ConVar g_cvarVersusLike;
 
 bool g_bPluginEnable = false;
+bool g_bShouldBalanceTanks = false;
 bool g_bBalancingTanks = false;
 bool g_bIsInEscapeSequence = false;
 bool g_bVersusLike = false;
@@ -92,6 +94,7 @@ public void OnPluginStart()
 	g_cvarCacheInterval = CreateConVar("sm_infected_balancer_cache_interval", "5.0", "float: Determines the interval in where the survivors are counted. Caching is done to prevent an expensive operation in each director vscript variable call. 0.1 is the minimum value which is virtually instantaneous but may cause overhead.", FCVAR_NOTIFY, true, 0.1);	
 
 	//balance adjustement
+	g_cvarShouldBalanceTanks = CreateConVar("sm_infected_balancer_tank_balance", "1", "Determines if the plugin should attempt to balance tanks.", FCVAR_NOTIFY, true, 0.0, true, 1.0);	
 	g_cvarIncreaseHealth = CreateConVar("sm_infected_balancer_tank_increase_hp_percent", "2", "Increases each tank's HP by specified percent (%) per alive survivor. Maximum value is 50 but it's not recommended to put anything higher than 5, as it could create extremely damage sponge Tanks. 0 to disable.", FCVAR_NOTIFY, true, 0.0, true, 50.0);	
 	g_cvarSpecialInfectedGeneralPower = CreateConVar("sm_infected_balancer_si_general_power", "0.456", "Determines how much the limit of the general special infected amount will increase according with each survivor alive. Default value is the recommended one but you can experiment. 0 to disable.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	g_cvarSpecialInfectedDominatorPower = CreateConVar("sm_infected_balancer_si_dominator_power", "0.333", "Determines how much each category of dominator infected will increase according with each survivor alive. Default value is the recommended one but you can experiment. 0 to disable.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -108,6 +111,7 @@ public void OnPluginStart()
 
 	g_cvarPluginEnable.AddChangeHook(CvarsChanged);
 	g_cvarCheckMode.AddChangeHook(CvarsChanged);
+	g_cvarShouldBalanceTanks.AddChangeHook(CvarsChanged);
 	g_cvarIncreaseHealth.AddChangeHook(CvarsChanged);
 	g_cvarDifficulty.AddChangeHook(CvarsChanged);
 	g_cvarGameMode.AddChangeHook(CvarsChanged);
@@ -154,6 +158,7 @@ void GetCvarsValues()
 	#endif
 
 	g_bPluginEnable = g_cvarPluginEnable.BoolValue;
+	g_bShouldBalanceTanks = g_cvarShouldBalanceTanks.BoolValue;
 	g_iCheckMode = g_cvarCheckMode.IntValue;
     g_iIncreaseHealthPercent = g_cvarIncreaseHealth.IntValue;
 	g_fBaseTankHealth = GetBaseTankHealth();
@@ -221,6 +226,8 @@ void TankInitialized(int iUserId)
 	PrintToServer("[DEBUG] l4d2_balancer_spawn_dyn::TankInitialized() - Value of g_bBalancingTanks is %b", g_bBalancingTanks);
 	#endif
 
+	//g_bShouldBalanceTanks is checked in the previous function, so it should be safe to not do the same check here
+
 	if(iUserId)
 	{
 		if(!g_bBalancingTanks && GetDesiredTankAmount() > L4D2_GetTankCount()) 
@@ -240,6 +247,9 @@ void BalanceTanks(int iUserId)
     #if DEBUG
     PrintToServer("[DEBUG] l4d2_balancer_spawn_dyn::BalanceTanks() - Called");
     #endif
+
+	//ditto TankInitialized 
+
 	int iClient = GetClientOfUserId(iUserId);
 
 	if(iClient)
@@ -440,9 +450,9 @@ public Action Event_TankSpawn(Event event, const char[] sEventName, bool db)
 	#if DEBUG
 	PrintToServer("[DEBUG] l4d2_balancer_spawn_dyn::Event_TankSpawn() - Called");
 	#endif
-	if(g_bPluginEnable)
+	if(g_bPluginEnable && g_bShouldBalanceTanks)
 	{
-    	RequestFrame(TankInitialized, GetEventInt(event, "userid"));
+		RequestFrame(TankInitialized, GetEventInt(event, "userid"));
 	}
 	return Plugin_Continue;
 }
