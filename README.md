@@ -41,9 +41,14 @@ Originally based on xZk's plugin, it eventually became a whole rewrite. The orig
     -   Caching is done to prevent an expensive operation in each director vscript variable call
     -   0.1 is the minimum value which is virtually instantaneous but may cause overhead
         -   Default: 5.0
+-   **sm_infected_balancer_tank_balance**
+    -   Determines if the plugin should balance tanks.
+    -   0 to disable
+        -   Default: 1
 -   **sm_infected_balancer_tank_increase_hp_percent**
     -   Increases each tank's HP by specified percent (%) per alive survivor
     -   Maximum value is 50 but it's not recommended to put anything higher than 5, as it could create extremely damage sponge Tanks
+    -   No effect if `sm_infected_balancer_tank_balance` is 0.
     -   0 to disable
         -   Default: 2
 -   **sm_infected_balancer_si_general_power**
