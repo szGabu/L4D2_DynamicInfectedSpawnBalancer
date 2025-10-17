@@ -19,7 +19,7 @@
 #define MODE_CHECK_DEAD_COUNT_AS_HALF			4
 #define MODE_CHECK_IGNORE_CAMPAIGN_NPCS			8
 
-char g_sDominatorLimit[4][]=
+char g_szDominatorLimit[4][]=
 {
 	"SmokerLimit",
 	"HunterLimit",
@@ -192,16 +192,12 @@ void GetCvarsValues()
 	}
 	else 
 	{
-		if(g_hCacheTimer != INVALID_HANDLE)
-			KillTimer(g_hCacheTimer);
-		#if DEBUG
-		else
-			PrintToServer("[DEBUG] l4d2_balancer_spawn_dyn::GetCvarsValues() - Won't destroy timer because it was never initialized.");
-		#endif
+		delete g_hBalancingTanksTimer;
+		delete g_hCacheTimer;
 	}
 }
 
-public Action Timer_OptimizeVarsLoop(Handle timer)
+public Action Timer_OptimizeVarsLoop(Handle hTimer)
 {
 	#if DEBUG
 	PrintToServer("[DEBUG] Timer_OptimizeVarsLoop() - Called");
@@ -282,9 +278,9 @@ void BalanceTanks(int iUserId)
 				PrintToServer("[DEBUG] l4d2_balancer_spawn_dyn::BalanceTanks() - Spawning tank on %f %f %f", fPos[0], fPos[1], fPos[2]);
 				#endif
 				int iTank = L4D2_SpawnTank(fPos, {0.0, 0.0, 0.0});
-
-
-				SDKHook(iTank, SDKHook_OnTakeDamageAlive, OnTakeDamageAlive); //ditto
+				
+				if(iTank)
+					SDKHook(iTank, SDKHook_OnTakeDamageAlive, OnTakeDamageAlive); //ditto
 			}   
 
 			g_hBalancingTanksTimer = CreateTimer(10.0, BalanceTanksPost); //balance tanks after a while
@@ -302,7 +298,7 @@ public Action OnTakeDamageAlive(int iVictim, int &iAttacker, int &iInflictor, fl
 		#if DEBUG
 		PrintToServer("[DEBUG] l4d2_balancer_spawn_dyn::OnTakeDamageAlive() - Tank got hit and we got a timer running (%d), removing it and triggering it right now.", g_hBalancingTanksTimer);
 		#endif
-		KillTimer(g_hBalancingTanksTimer);
+		delete g_hBalancingTanksTimer;
 		BalanceTanksPost(INVALID_HANDLE); //we don't need it anyway
 		return Plugin_Continue;
 	}
@@ -344,11 +340,11 @@ public Action BalanceTanksPost(Handle timer)
 }
 
 
-public Action L4D_OnGetScriptValueInt(const char[] sKey, int &iRetVal)
+public Action L4D_OnGetScriptValueInt(const char[] szKey, int &iRetVal)
 {
 	if(g_bPluginEnable && g_iExtraSurvivorCount > 0)
 	{
-		if (strcmp(sKey, "MaxSpecials", false) == 0)
+		if (strcmp(szKey, "MaxSpecials", false) == 0)
 		{
 			iRetVal += RoundToCeil(g_iExtraSurvivorCount * (iRetVal*g_fSpecialInfectedGeneralPower));
 
@@ -357,7 +353,7 @@ public Action L4D_OnGetScriptValueInt(const char[] sKey, int &iRetVal)
 			
 			return Plugin_Handled;
 		}
-		else if (strcmp(sKey, "DominatorLimit", false) == 0 && iRetVal != -1 && g_iExtraSurvivorCount >= 1)
+		else if (strcmp(szKey, "DominatorLimit", false) == 0 && iRetVal != -1 && g_iExtraSurvivorCount >= 1)
 		{
 			// From Valve's Developer Wiki:
 			// Maximum number of dominator SI types (Hunter, Smoker, Jockey or Charger) that can freely fill up their caps. 
@@ -393,16 +389,16 @@ public Action L4D_OnGetScriptValueInt(const char[] sKey, int &iRetVal)
 			else
 				return Plugin_Continue;
 		}
-		else if (iRetVal != 0 && (strcmp(sKey, "Boomer", false) == 0 || strcmp(sKey, "Spitter", false) == 0))
+		else if (iRetVal != 0 && (strcmp(szKey, "Boomer", false) == 0 || strcmp(szKey, "Spitter", false) == 0))
 		{
 			iRetVal = g_iCurrentSurvivorCount;
 			return Plugin_Handled;
 		}
 		else 
 		{
-			for(int i; i < sizeof(g_sDominatorLimit); i++)
+			for(int i; i < sizeof(g_szDominatorLimit); i++)
 			{
-				if((strcmp(sKey, g_sDominatorLimit[i], false) == 0))
+				if((strcmp(szKey, g_szDominatorLimit[i], false) == 0))
 				{
 					iRetVal += RoundToNearest(g_iExtraSurvivorCount * (iRetVal*g_fSpecialInfectedDominatorPower));
 					return Plugin_Handled;
@@ -414,11 +410,11 @@ public Action L4D_OnGetScriptValueInt(const char[] sKey, int &iRetVal)
 	return Plugin_Continue;
 }
 
-public Action L4D_OnGetScriptValueFloat(const char[] sKey, float &fRetVal)
+public Action L4D_OnGetScriptValueFloat(const char[] szKey, float &fRetVal)
 {
 	if(g_bPluginEnable)
 	{
-		if(strcmp(sKey, "SpecialRespawnInterval", false) == 0)
+		if(strcmp(szKey, "SpecialRespawnInterval", false) == 0)
 		{
 			if(fRetVal <= 20.0)
 				return Plugin_Continue;
@@ -429,11 +425,11 @@ public Action L4D_OnGetScriptValueFloat(const char[] sKey, float &fRetVal)
 				fRetVal = 20.0;
 
 			return Plugin_Handled;
-		} else if (strcmp(sKey, "CommonLimit", false) == 0 || 
-				strcmp(sKey, "MegaMobSize", false) == 0 || 
-				strcmp(sKey, "MobMaxSize", false) == 0 || 
-				strcmp(sKey, "MobMinSize", false) == 0 || 
-				strcmp(sKey, "PreTankMobMax", false) == 0)
+		} else if (strcmp(szKey, "CommonLimit", false) == 0 || 
+				strcmp(szKey, "MegaMobSize", false) == 0 || 
+				strcmp(szKey, "MobMaxSize", false) == 0 || 
+				strcmp(szKey, "MobMinSize", false) == 0 || 
+				strcmp(szKey, "PreTankMobMax", false) == 0)
 		{
 			fRetVal += RoundToCeil(g_iExtraSurvivorCount * (fRetVal*g_fCommonInfectedPower));
 			g_cvarCommonLimit.SetInt(RoundToCeil(fRetVal));
@@ -445,26 +441,26 @@ public Action L4D_OnGetScriptValueFloat(const char[] sKey, float &fRetVal)
 	return Plugin_Continue;
 }
 
-public Action Event_TankSpawn(Event event, const char[] sEventName, bool db)
+public Action Event_TankSpawn(Event hEvent, const char[] szEventName, bool bDontBroadcast)
 {
 	#if DEBUG
 	PrintToServer("[DEBUG] l4d2_balancer_spawn_dyn::Event_TankSpawn() - Called");
 	#endif
 	if(g_bPluginEnable && g_bShouldBalanceTanks)
 	{
-		RequestFrame(TankInitialized, GetEventInt(event, "userid"));
+		RequestFrame(TankInitialized, GetEventInt(hEvent, "userid"));
 	}
 	return Plugin_Continue;
 }
 
-public Action Event_FinaleEscapeStart(Event event, const char[] sEventName, bool db)
+public Action Event_FinaleEscapeStart(Event hEvent, const char[] szEventName, bool bDontBroadcast)
 {
 	if(g_bPluginEnable)
     	g_bIsInEscapeSequence = true;
     return Plugin_Continue;
 }
 
-public Action Event_RoundStart(Event event, const char[] sEventName, bool db)
+public Action Event_RoundStart(Event hEvent, const char[] szEventName, bool bDontBroadcast)
 {
 	GetCvarsValues();
     g_bIsInEscapeSequence = false;
@@ -472,7 +468,7 @@ public Action Event_RoundStart(Event event, const char[] sEventName, bool db)
     return Plugin_Continue;
 }
 
-public Action Event_TankKilled(Event event, const char[] sEventName, bool db)
+public Action Event_TankKilled(Event hEvent, const char[] szEventName, bool bDontBroadcast)
 {
     #if DEBUG
 	PrintToServer("[DEBUG] l4d2_balancer_spawn_dyn::Event_TankKilled() - Called");
@@ -587,9 +583,9 @@ stock bool IsBotCampaignNpc(int iClient)
 {
 	if(IsClientInGame(iClient) && GetClientTeam(iClient) == L4D_TEAM_SURVIVOR && IsPlayerAlive(iClient))
 	{
-		char sTargetname[MAX_NAME_LENGTH];
-		GetEntPropString(iClient, Prop_Data, "m_iName", sTargetname, sizeof(sTargetname));
-		return StrContains(sTargetname, "npc_", false) == 0;
+		char szTargetname[MAX_NAME_LENGTH];
+		GetEntPropString(iClient, Prop_Data, "m_iName", szTargetname, sizeof(szTargetname));
+		return StrContains(szTargetname, "npc_", false) == 0;
 	}
 	else
 		return false;
